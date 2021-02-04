@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>insects</class>
- <widget class="QMainWindow" name="insects">
+ <class>SICOHY</class>
+ <widget class="QMainWindow" name="SICOHY">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -426,7 +426,7 @@
    </palette>
   </property>
   <property name="windowTitle">
-   <string>Counting flying insects</string>
+   <string>SICOHY</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget
@@ -902,7 +902,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>360</y>
+      <y>340</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -945,7 +945,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>410</y>
+      <y>390</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -984,7 +984,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>580</y>
+      <y>560</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -1000,6 +1000,9 @@
     </property>
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="mouseTracking">
+     <bool>false</bool>
     </property>
     <property name="styleSheet">
      <string notr="true">QPushButton
@@ -1155,7 +1158,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>480</y>
+      <y>460</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -1260,7 +1263,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>530</y>
+      <y>510</y>
       <width>101</width>
       <height>41</height>
      </rect>
@@ -1295,6 +1298,63 @@
      <string>Results</string>
     </property>
    </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>630</y>
+      <width>121</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QProgressBar{
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+QProgressBar::chunk 
+{
+    background-color:  rgb(0,217,0);
+    border-radius: 2px;
+}</string>
+    </property>
+    <property name="value">
+     <number>100</number>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="completed">
+    <property name="geometry">
+     <rect>
+      <x>740</x>
+      <y>660</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	color: rgb(0,217,0);
+	background: rgb(80, 84, 105);
+	font: 75 13pt &quot;Reboto Medium&quot;;
+	font-weight: 600;
+}
+</string>
+    </property>
+    <property name="text">
+     <string>Completed!</string>
+    </property>
+   </widget>
    <zorder>label</zorder>
    <zorder>lb_Original</zorder>
    <zorder>Importar</zorder>
@@ -1306,6 +1366,8 @@
    <zorder>Individuals</zorder>
    <zorder>lb_gaia</zorder>
    <zorder>Results</zorder>
+   <zorder>progressBar</zorder>
+   <zorder>completed</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="enabled">

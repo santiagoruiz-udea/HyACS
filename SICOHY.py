@@ -22,35 +22,15 @@
 import os                                                           # Operating system dependent functionalities module
 import cv2                                                          # Images processing module 
 import sys                                                          # Module of variables and functions used by the interpreter
-import math                                                         # C standard mathematical functions module
 import PyQt5                                                        # Module of the set of Python bindings for Qt v5 
-import matplotlib                                                   # Plotting module 
 import numpy as np                                                  # Mathematical functions module
-import matplotlib.pyplot as plt                                     # Module that provides a MATLAB-like plotting framework 
 from xlsxwriter import Workbook                                     # Module for creating Excel XLSX files
-from skimage.measure import label, regionprops                      # Additional images processing module
 from PyQt5 import QtCore, QtGui, uic, QtWidgets                     # Additional elements of PyQt5 module 
 from PyQt5.QtWidgets import QMessageBox                             # Module to asking the user a question and receiving an answer
 from PyQt5.QtGui import QCursor
 import pandas as pd
-import joblib
-from skimage.measure import label, regionprops
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import train_test_split 
-from PyQt5.QtWidgets import QPushButton,QVBoxLayout
-
-
-import sys
-try:
-    from PyQt5.QtCore import Qt, QT_VERSION_STR
-    from PyQt5.QtGui import QImage
-    from PyQt5.QtWidgets import QApplication, QFileDialog
-except ImportError:
-    try:
-        from PyQt4.QtCore import Qt, QT_VERSION_STR
-        from PyQt4.QtGui import QImage, QApplication, QFileDialog
-    except ImportError:
-        raise ImportError("Requires PyQt5 or PyQt4.")
+from time import sleep
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from QtImageViewer import QtImageViewer
 
 
@@ -72,9 +52,10 @@ class Second(QtWidgets.QMainWindow, Ui_results):
         QtWidgets.QMainWindow.__init__(self,*args,**kwargs)
         self.setupUi(self)
         
-        self.lb_udea.setMargin(3)                                   # Logo UdeA
-        self.lb_gepar.setMargin(3)                                  # Logo GEPAR
-        self.lb_capiro.setMargin(3)                                 # Logo Capiro
+        self.lb_udea.setMargin(3)                                     # Logo UdeA
+        self.lb_gepar.setMargin(3)                                    # Logo GEPAR
+        self.lb_geolimna.setMargin(3)                                 # Logo Capiro
+        self.lb_gaia.setMargin(3)              
 
         self.Exit.clicked.connect(self.Exit_execution)              # Connection of the button with the Exit_execution method call
 
@@ -91,11 +72,11 @@ class Third(QtWidgets.QMainWindow, Ui_individuals):
     def __init__(self,  *args, **kwargs):
         QtWidgets.QMainWindow.__init__(self,*args,**kwargs)
         self.setupUi(self)
-        
-        self.lb_udea.setMargin(3)                                   # Logo UdeA
-        self.lb_gepar.setMargin(3)                                  # Logo GEPAR
-        self.lb_geolimna.setMargin(3)                               # Logo GeoLimna
-        self.lb_gaia.setMargin(3)                                   #Logo Gaia
+               
+        self.lb_udea.setMargin(3)                                     # Logo UdeA
+        self.lb_gepar.setMargin(3)                                    # Logo GEPAR
+        self.lb_geolimna.setMargin(3)                                 # Logo Capiro
+        self.lb_gaia.setMargin(3)                                     # Logo Capiro
 
         self.tamaño_item = 0
 
@@ -128,6 +109,31 @@ class Third(QtWidgets.QMainWindow, Ui_individuals):
 
         self.close()              # The graphical interface is closed
 
+
+class Worker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    
+    def __init__(self, progressBar, val_start, val_max, delay, parent=None):
+        super().__init__(parent)
+        self.progressBar = progressBar
+        self.value = val_start
+        self.val_max = val_max
+        self.delay = delay
+        self.finish_flag = 0
+
+    def run(self):
+        while self.finish_flag == 0:
+            if self.value != self.val_max:
+                self.value += 1
+            
+            sleep(self.delay)
+            print("Progress {}%".format(self.value))
+            self.progressBar.setValue(self.value)
+                
+        print('Worker stopped!')
+        self.finished.emit()
+
 # Implementation of the class MainWindow
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
@@ -149,7 +155,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lb_gepar.setPixmap(QtGui.QPixmap('LogoGepar.png'))       # Logo GEPAR
         self.lb_geolimna.setPixmap(QtGui.QPixmap('LogoGeoLimna.png')) # Logo GeoLimna
         self.lb_gaia.setPixmap(QtGui.QPixmap('LogoGaia.jpg'))         # Logo Gaia
-
         
         self.lb_udea.setMargin(3)                                     # Logo UdeA
         self.lb_gepar.setMargin(3)                                    # Logo GEPAR
@@ -165,14 +170,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frame_interface = QtImageViewer(self)
         
         self.frame_interface.hide()
+        self.progressBar.hide()
+        self.completed.hide()
+        
         #Variables para calcular resultados
         self.cont_hyallela = 0                      # Dictionary's Key
         self.dic_hyallela = {}                      # Dictionary that holds anchor boxes 
-        
         self.hyallela_lenght = 0                    # Hyallela's lenght
         self.hyallela_width = 0                     # Hyallela's width
         self.area = 0                               # Hyallela's area
-
         self.indexes = 0
         
         
@@ -181,29 +187,48 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         """  In this method, the file browser is enabled so that the user selects the video that will be analyzed. Some variables are 
     	     initialized and it is started the timer that will control the capture of frames in the video to draw the line (In the preview
              of the video selected). This function doesn't return any variables."""
+        try:
+            # variable initialization
+            self.cont_hyallela = 0                                 
+            self.dic_hyallela = {}                            
+    
+            self.image_path, _ = QtWidgets.QFileDialog.getOpenFileName(self)   # File explorer is opened to select the video that will be used                     
+            self.image = cv2.imread(self.image_path)                     # A video object is created according to the path selected
+            self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
+    
+            image_interface=QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
+            frame_interface = QtGui.QPixmap()
+            frame_interface.convertFromImage(image_interface.rgbSwapped())
+    
+            self.frame_interface.setImage(frame_interface)
+            self.frame_interface.setGeometry(30, 50, 635, 635)
+            self.frame_interface.setStyleSheet("background:  rgb(39, 108, 222); border: 1px solid rgb(39, 108, 222)")
+            self.frame_interface.show()
+            self.completed.hide()
+        except:
+            pass
+
+    """-------------------------------------- c. Predictions --------------------------------------------------- """
+    def run_barProgressUpdate(self, val_start, val_max, delay):
         
-        # variable initialization
-        self.cont_hyallela = 0                                 
-        self.dic_hyallela = {}                            
-
-        self.image_path, _ = QtWidgets.QFileDialog.getOpenFileName(self)   # File explorer is opened to select the video that will be used                     
-        self.image = cv2.imread(self.image_path)                     # A video object is created according to the path selected
-        self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
-
-        image_interface=QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
-        frame_interface = QtGui.QPixmap()
-        frame_interface.convertFromImage(image_interface.rgbSwapped())
-
-        self.frame_interface.setImage(frame_interface)
-        self.frame_interface.setGeometry(30, 50, 635, 635)
-        self.frame_interface.setStyleSheet("background:  rgb(39, 108, 222); border: 1px solid rgb(39, 108, 222)")
-        self.frame_interface.show()
+        "------------------------------------------------------------------------"
+        self.thread = QThread()
+        self.thread.daemon = False
+        self.worker = Worker(self.progressBar, val_start, val_max, delay)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.thread.wait)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.thread.start() 
 
     """-------------------------------------- c. Predictions --------------------------------------------------- """
     def Start_execution(self):      
-        print('Processing...')
-        net=  cv2.dnn.readNet('SICOHY.weights', 'SICOHY.cfg')
-        
+        self.progressBar.show() 
+        self.run_barProgressUpdate(0, 85, 1.1)
+
+        net=  cv2.dnn.readNet('SICOHY.weights', 'SICOHY.cfg')        
         classes = []
         with open('SICOHY.names',"r") as f:
           classes = [line.strip() for line in f.readlines()]
@@ -213,15 +238,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #self.image = cv2.resize(self.image, None, fx=0.3, fy = 0.3)
         height,width,channels =self.image.shape
         self.img_copy = self.image.copy()
+        
         # Detecting objects
         blob = cv2.dnn.blobFromImage(self.image, 0.00392,(32*64,32*64),(0,0,0), True, crop= False)
         net.setInput(blob)
         outs = net.forward(output_layers) #Caracteristica layers
         
+        self.worker.value = 85
+        self.worker.val_max = 99
+        self.worker.delay = 0.4
+        
         # Showing infromations on the screen
         confidences = []
         boxes = []
         class_ids = []
+
         for out in outs:
             for detection in out:
                 scores = detection[5:]
@@ -257,11 +288,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.dic_hyallela[self.cont_hyallela] = [x, y, w, h]                                  # Add boxes in diccionary
                 self.cont_hyallela += 1
         
+        self.worker.value = 100
+        sleep(1.2)
+        self.worker.finish_flag = 1
+        
         #cv2.imwrite('/content/drive/Shared drives/8_SICOHY: Sistema de identificación, clasificación y conteo Hyalellas/2_Experimentos_Software/4_Base_de_datos/Test.tif', img)
         
         print(len(self.indexes))
                    
-        #cv2.imwrite(self.image_path[:-4]+'_labeled.JPG', img)
         self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
 
         image_interface=QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
@@ -278,6 +312,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.Individuals.setStyleSheet("color: white; background:  rgb(39, 108, 222); border: 1px solid white; border-radius: 10px; font: 75 14pt 'Reboto Medium';")
         self.Individuals.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+        self.completed.show()
+
         
     """------------------------------------------------ g.  Stopping the execution  --------------------------------------------------------"""       
     def Show_results(self):

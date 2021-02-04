@@ -426,7 +426,7 @@
    </palette>
   </property>
   <property name="windowTitle">
-   <string>Counting flying insects</string>
+   <string>SICOHY</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget
@@ -448,8 +448,8 @@
    <widget class="QPushButton" name="Exit">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>600</y>
+      <x>480</x>
+      <y>580</y>
       <width>111</width>
       <height>41</height>
      </rect>
@@ -469,16 +469,21 @@
     <property name="styleSheet">
      <string notr="true">QPushButton
 {
-	color:  rgb(39, 108, 222);
-	background: white;
-	border: 2px solid  rgb(39, 108, 222);
+	color: white;
+	background:  rgb(39, 108, 222);
+	border: 1px solid white;
 	border-radius: 10px;
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
 
+/*QPushButton:hover {
+	color:  rgb(39, 108, 222);
+	background: white;
+	border: 1px  solid rgb(39, 108, 222);
+}*/
+
 QPushButton:hover {
-	color: white;
-	background: rgb(39, 108, 222);
+	background:  rgb(69, 138, 252);
 }</string>
     </property>
     <property name="text">
@@ -488,10 +493,10 @@ QPushButton:hover {
    <widget class="QLabel" name="lb_udea">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>590</y>
-      <width>51</width>
-      <height>61</height>
+      <x>40</x>
+      <y>560</y>
+      <width>61</width>
+      <height>91</height>
      </rect>
     </property>
     <property name="autoFillBackground">
@@ -541,10 +546,10 @@ QPushButton:hover {
    <widget class="QLabel" name="lb_gepar">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>590</y>
-      <width>51</width>
-      <height>61</height>
+      <x>370</x>
+      <y>560</y>
+      <width>61</width>
+      <height>91</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -892,10 +897,10 @@ QPushButton:hover {
    <widget class="QPushButton" name="next">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>120</y>
+      <x>580</x>
+      <y>130</y>
       <width>61</width>
-      <height>91</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="cursor">
@@ -916,22 +921,22 @@ QPushButton:hover {
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>caret-right-solid.svg</normaloff>caret-right-solid.svg</iconset>
+      <normaloff>right.svg</normaloff>right.svg</iconset>
     </property>
     <property name="iconSize">
      <size>
-      <width>120</width>
-      <height>120</height>
+      <width>60</width>
+      <height>60</height>
      </size>
     </property>
    </widget>
    <widget class="QPushButton" name="previous">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>110</y>
+      <x>40</x>
+      <y>130</y>
       <width>61</width>
-      <height>101</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="cursor">
@@ -951,21 +956,21 @@ QPushButton:hover {
     </property>
     <property name="icon">
      <iconset>
-      <normaloff>caret-left-solid.svg</normaloff>caret-left-solid.svg</iconset>
+      <normaloff>left.svg</normaloff>left.svg</iconset>
     </property>
     <property name="iconSize">
      <size>
-      <width>120</width>
-      <height>120</height>
+      <width>60</width>
+      <height>60</height>
      </size>
     </property>
    </widget>
    <widget class="QLabel" name="lb_geolimna">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>590</y>
-      <width>91</width>
+      <x>110</x>
+      <y>580</y>
+      <width>121</width>
       <height>61</height>
      </rect>
     </property>
@@ -1003,9 +1008,9 @@ QPushButton:hover {
    <widget class="QLabel" name="lb_gaia">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>590</y>
-      <width>101</width>
+      <x>240</x>
+      <y>580</y>
+      <width>121</width>
       <height>61</height>
      </rect>
     </property>
