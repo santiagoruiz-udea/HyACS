@@ -476,12 +476,6 @@
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
 
-/*QPushButton:hover {
-	color:  rgb(39, 108, 222);
-	background: white;
-	border: 1px  solid rgb(39, 108, 222);
-}*/
-
 QPushButton:hover {
 	background:  rgb(69, 138, 252);
 }</string>

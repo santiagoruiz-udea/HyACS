@@ -475,7 +475,10 @@
 	border-radius: 10px;
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
-</string>
+
+QPushButton:hover {
+	background:  rgb(69, 138, 252);
+}</string>
     </property>
     <property name="text">
      <string>Exit</string>

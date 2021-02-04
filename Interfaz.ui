@@ -932,8 +932,9 @@
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
 
-
-
+QPushButton:hover {
+	background:  rgb(69, 138, 252);
+}
 
 </string>
     </property>
@@ -974,7 +975,10 @@
 	border-radius: 10px;
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
-</string>
+
+QPushButton:hover {
+	background:  rgb(69, 138, 252);
+}</string>
     </property>
     <property name="text">
      <string>Start</string>
@@ -1013,7 +1017,10 @@
 	border-radius: 10px;
 	font: 75 14pt &quot;Reboto Medium&quot;;
 }
-</string>
+
+QPushButton:hover {
+	background:  rgb(69, 138, 252);
+}</string>
     </property>
     <property name="text">
      <string>Exit</string>

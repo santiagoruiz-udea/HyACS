@@ -47,7 +47,7 @@ qtCreatorFile = "individuals.ui"                                  # Name of the 
 Ui_individuals, QtBaseClass = uic.loadUiType(qtCreatorFile)           # The .ui file is imported to generate the graphical interface
 
 
-class Second(QtWidgets.QMainWindow, Ui_results):
+class Results(QtWidgets.QMainWindow, Ui_results):
     def __init__(self,  *args, **kwargs):
         QtWidgets.QMainWindow.__init__(self,*args,**kwargs)
         self.setupUi(self)
@@ -67,7 +67,7 @@ class Second(QtWidgets.QMainWindow, Ui_results):
 
         self.close()              # The graphical interface is closed
 
-class Third(QtWidgets.QMainWindow, Ui_individuals):
+class Individuals(QtWidgets.QMainWindow, Ui_individuals):
     current_index = 0
     def __init__(self,  *args, **kwargs):
         QtWidgets.QMainWindow.__init__(self,*args,**kwargs)
@@ -289,7 +289,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.cont_hyallela += 1
         
         self.worker.value = 100
-        sleep(1.2)
+        sleep(0.5)
         self.worker.finish_flag = 1
         
         #cv2.imwrite('/content/drive/Shared drives/8_SICOHY: Sistema de identificación, clasificación y conteo Hyalellas/2_Experimentos_Software/4_Base_de_datos/Test.tif', img)
@@ -317,7 +317,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
     """------------------------------------------------ g.  Stopping the execution  --------------------------------------------------------"""       
     def Show_results(self):
-        self.dialog = Second(self)
+        self.dialog = Results(self)
         self.dialog.label_result.setText(str(len(self.indexes)))
         #self.dialog.label_length.setText(str(round(sum(self.average_lenght)/len(self.average_lenght),2)) +' px')
         #self.dialog.label_width.setText(str(round(sum(self.average_width)/len(self.average_width),2)) +' px')
@@ -325,7 +325,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog.show()
         
     def Show_results_individual(self):
-        self.dialog_individual = Third(self)
+        self.dialog_individual = Individuals(self)
         self.dialog_individual.set_tamaño_items(self.cont_hyallela-1)
         self.dialog_individual.next.clicked.connect(self.show_hyallela)
         self.dialog_individual.previous.clicked.connect(self.show_hyallela)
@@ -389,7 +389,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_individual.Lb_hyallela.setPixmap(frame_interface)
         self.dialog_individual.Lb_hyallela.show()
 
-         
 
     """------------------------------------------------ h. Exiting the execution  --------------------------------------------------------"""
     def Exit_execution(self):
