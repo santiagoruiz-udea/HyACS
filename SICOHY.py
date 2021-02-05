@@ -205,6 +205,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.frame_interface.setStyleSheet("background:  rgb(39, 108, 222); border: 1px solid rgb(39, 108, 222)")
             self.frame_interface.show()
             self.completed.hide()
+            self.progressBar.hide()
         except:
             pass
 
@@ -330,13 +331,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_individual.next.clicked.connect(self.show_hyallela)
         self.dialog_individual.previous.clicked.connect(self.show_hyallela)
         self.dialog_individual.show() 
+        self.show_hyallela()
     
     def show_hyallela(self):
         x, y, w, h = self.dic_hyallela[self.dialog_individual.get_pos()] 
-        hyallela_img = self.img_copy[y-10:y+h+10,x-10:x+w+10,:]
-        hyallela_img_copy = hyallela_img.copy()
-        hyallela_gray = cv2.cvtColor(hyallela_img,cv2.COLOR_BGR2GRAY)
-        ret,thresh = cv2.threshold(hyallela_gray,200,255,cv2.THRESH_BINARY_INV)
+        individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
+        #cv2.imwrite('Individuo_'+str(h)+'.tif', individual)
+        individual_copy = individual.copy()
+        hyallela_HSV = cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
+        H,S,V = cv2.split(hyallela_HSV)
+        ret,thresh = cv2.threshold(H[10:H.shape[0]-10, 10:H.shape[1]-10 ],50,255,cv2.THRESH_BINARY_INV)
 
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
         contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
@@ -345,16 +349,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
         thresh_copy = thresh.copy()
+        
+        cnt = contours[0]  
+        
+        # Drawing the contour
+        contours[0] += 10                                      # Hyallela's Contours
+        #cv2.drawContours(individual, contours, 0, (0,0,255), 1)
+        ellipse = cv2.fitEllipse(contours[0])    
+        cv2.ellipse(individual,ellipse,(0,0,255),1)
+        
         #feature extraction
-        cnt = contours[0]                                                    # Hyallela's Contours
         area = cv2.contourArea(cnt)                                          # Area
         perimeter = cv2.arcLength(cnt,True)                                  # Perimeter
         (x,y),(ma,MA),angle = cv2.fitEllipse(cnt)                            # Ellipse
         eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
 
         # Curvature
-        imagen_draw = hyallela_gray*0
-        src = cv2.medianBlur(hyallela_img_copy, 5)
+        imagen_draw = hyallela_HSV*0
+        src = cv2.medianBlur(individual, 5)
         src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         circles = cv2.HoughCircles(src, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
         try:
@@ -381,7 +393,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_individual.label_eccentricity.setText(str(eccentricity))
         self.dialog_individual.label_cuvature.setText(str(curvature))
 
-        self.image_interface = cv2.resize(hyallela_img, (461,271))                     # A video object is created according to the path selected
+        self.image_interface = cv2.resize(individual, (461,271))                     # A video object is created according to the path selected
         image_interface = QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
         frame_interface = QtGui.QPixmap()
         frame_interface.convertFromImage(image_interface.rgbSwapped())
