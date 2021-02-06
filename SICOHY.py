@@ -180,6 +180,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.hyallela_width = 0                     # Hyallela's width
         self.area = 0                               # Hyallela's area
         self.indexes = 0
+        self.df = 0
         
         
     """-------------------------------------- b. Choice of directory for reading the video --------------------------------------------------- """
@@ -192,7 +193,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.cont_hyallela = 0                                 
             self.dic_hyallela = {}                            
     
-            self.image_path, _ = QtWidgets.QFileDialog.getOpenFileName(self)   # File explorer is opened to select the video that will be used                     
+            self.image_path, _ = QtWidgets.QFileDialog.getOpenFileName(self)   # File explorer is opened to select the video that will be used                   
             self.image = cv2.imread(self.image_path)                     # A video object is created according to the path selected
             self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
     
@@ -228,7 +229,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def Start_execution(self):      
         self.progressBar.show() 
         self.run_barProgressUpdate(0, 85, 1.1)
-
+        rows = []
         net=  cv2.dnn.readNet('SICOHY.weights', 'SICOHY.cfg')        
         classes = []
         with open('SICOHY.names',"r") as f:
@@ -286,16 +287,71 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 cv2.rectangle(self.image, (x, y), (x + w, y + h), (0,255,0),2)
                 cv2.putText(self.image, label, (x, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
                 cv2.putText(self.image, str(round(confidences[i],2)), (x+50, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
+
                 self.dic_hyallela[self.cont_hyallela] = [x, y, w, h]                                  # Add boxes in diccionary
                 self.cont_hyallela += 1
+
+                individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
+                individual_copy = individual.copy()
+                hyallela_HSV = cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
+                H,S,V = cv2.split(hyallela_HSV)
+                ret,thresh = cv2.threshold(H[10:H.shape[0]-10, 10:H.shape[1]-10 ],50,255,cv2.THRESH_BINARY_INV)
+
+                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
+                contorno_hyallela = contours[0]                                                                         
+                thresh[...] = 0                                                                             
+                cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
+                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                thresh_copy = thresh.copy()
+                
+                cnt = contours[0]  
+                
+                #feature extraction
+                area = cv2.contourArea(cnt)                                          # Area
+                perimeter = round(cv2.arcLength(cnt,True),2)                                  # Perimeter
+                (x,y),(ma,MA),angle = cv2.fitEllipse(cnt)                            # Ellipse
+                eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
+
+                # Curvature
+                src = cv2.medianBlur(individual_copy, 5)
+                src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+                imagen_draw = src*0
+                circles = cv2.HoughCircles(src, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
+                try:
+                    circles = np.uint16(np.around(circles))
+                    cord = circles[0][0]
+                    cv2.circle(imagen_draw, (cord[0], cord[1]), cord[2], 255, 1)
+                    and_img = cv2.bitwise_and(thresh_copy,imagen_draw)
+                    curvature = np.count_nonzero(and_img)
+                except:
+                    curvature = 'none'
+                
+                # ---------------- Show result --------------------------
+                # Major axis like length and minor axis like width
+                if (2*MA > 2*ma):
+                    length = int(2*MA)
+                    width = int(2*ma)
+                # Major axis like width and minor axis like length
+                else:
+                    length = int(2*ma)
+                    width = int(2*MA)
+
+                row = [area, perimeter, eccentricity, curvature, length, width]
+                rows.append(row)
+
+
         
         self.worker.value = 100
         sleep(0.5)
         self.worker.finish_flag = 1
-        
-        #cv2.imwrite('/content/drive/Shared drives/8_SICOHY: Sistema de identificación, clasificación y conteo Hyalellas/2_Experimentos_Software/4_Base_de_datos/Test.tif', img)
-        
-        print(len(self.indexes))
+        (myDirectory,nameFile) = os.path.split(self.image_path)
+        self.df = pd.DataFrame(rows, columns=['Area','Perimeter','Eccentricity','Curvature', 'Length', 'Width'])
+        if (os.path.isdir(myDirectory + '/Result_' + nameFile[:-4]) == False):
+            os.mkdir(myDirectory + '/Result_' + nameFile[:-4])
+            
+        if (os.path.isfile('feature.xlsx') == False):
+            self.df.to_excel(myDirectory + '/Result_' + nameFile[:-4] + '/feature.xlsx', index=False) 
                    
         self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
 
@@ -319,10 +375,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     """------------------------------------------------ g.  Stopping the execution  --------------------------------------------------------"""       
     def Show_results(self):
         self.dialog = Results(self)
+        total_area = self.df['Area'].get_values()
+        length = self.df['Length'].get_values()
+        width = self.df['Width'].get_values()
         self.dialog.label_result.setText(str(len(self.indexes)))
-        #self.dialog.label_length.setText(str(round(sum(self.average_lenght)/len(self.average_lenght),2)) +' px')
-        #self.dialog.label_width.setText(str(round(sum(self.average_width)/len(self.average_width),2)) +' px')
-        #self.dialog.label_area.setText(str(self.area) +' px')
+        self.dialog.label_length.setText(str(round(sum(length)/len(length),2)) +' px')
+        self.dialog.label_width.setText(str(round(sum(width)/len(width),2)) +' px')
+        self.dialog.label_area.setText(str(sum(total_area)) +' px')
         self.dialog.show()
         
     def Show_results_individual(self):
@@ -336,7 +395,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def show_hyallela(self):
         x, y, w, h = self.dic_hyallela[self.dialog_individual.get_pos()] 
         individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
-        #cv2.imwrite('Individuo_'+str(h)+'.tif', individual)
         individual_copy = individual.copy()
         hyallela_HSV = cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
         H,S,V = cv2.split(hyallela_HSV)
@@ -356,42 +414,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         contours[0] += 10                                      # Hyallela's Contours
         #cv2.drawContours(individual, contours, 0, (0,0,255), 1)
         ellipse = cv2.fitEllipse(contours[0])    
-        cv2.ellipse(individual,ellipse,(0,0,255),1)
-        
-        #feature extraction
-        area = cv2.contourArea(cnt)                                          # Area
-        perimeter = cv2.arcLength(cnt,True)                                  # Perimeter
-        (x,y),(ma,MA),angle = cv2.fitEllipse(cnt)                            # Ellipse
-        eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
+        cv2.ellipse(individual,ellipse,(0,0,255),1) 
 
-        # Curvature
-        imagen_draw = hyallela_HSV*0
-        src = cv2.medianBlur(individual, 5)
-        src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
-        circles = cv2.HoughCircles(src, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
-        try:
-            circles = np.uint16(np.around(circles))
-            cord = circles[0][0]
-            cv2.circle(imagen_draw, (cord[0], cord[1]), cord[2], 255, 1)
-            and_img = cv2.bitwise_and(thresh_copy,imagen_draw)
-            curvature = np.count_nonzero(and_img)
-        except:
-            curvature = 'none'
-        
         # ---------------- Show result --------------------------
-        # Major axis like length and minor axis like width
-        if (2*MA > 2*ma):
-            self.dialog_individual.label_length.setText(str(int(2*MA)))
-            self.dialog_individual.label_width.setText(str(int(2*ma)))
-        # Major axis like width and minor axis like length
-        else:
-            self.dialog_individual.label_length.setText(str(int(2*ma)))
-            self.dialog_individual.label_width.setText(str(int(2*MA)))
-
-        self.dialog_individual.label_area.setText(str(area))
-        self.dialog_individual.label_perimeter.setText(str(perimeter))
-        self.dialog_individual.label_eccentricity.setText(str(eccentricity))
-        self.dialog_individual.label_cuvature.setText(str(curvature))
+        self.dialog_individual.label_area.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Area']))
+        self.dialog_individual.label_perimeter.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Perimeter']))
+        self.dialog_individual.label_eccentricity.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Eccentricity']))
+        self.dialog_individual.label_cuvature.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Curvature']))
+        self.dialog_individual.label_length.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Length']))
+        self.dialog_individual.label_width.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Width']))
 
         self.image_interface = cv2.resize(individual, (461,271))                     # A video object is created according to the path selected
         image_interface = QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
