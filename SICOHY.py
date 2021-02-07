@@ -32,7 +32,7 @@ import pandas as pd
 from time import sleep
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from QtImageViewer import QtImageViewer
-
+import matplotlib.pyplot as plt
 
 """ ----------------------------------------------------------------------------------------------------------------------------------------------
     ----------------------------------- 2. Implementation of the class and its methods. ----------------------------------------------------------
@@ -314,9 +314,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
 
                 # Curvature
-                src = cv2.medianBlur(individual_copy, 5)
-                src = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
-                imagen_draw = src*0
+                imagen_draw = thresh_copy*0
+                src = cv2.cvtColor(individual_copy, cv2.COLOR_BGR2GRAY)
+                src = cv2.medianBlur(src, 7)
+                
+                
                 circles = cv2.HoughCircles(src, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
                 try:
                     circles = np.uint16(np.around(circles))
@@ -351,7 +353,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             os.mkdir(myDirectory + '/Result_' + nameFile[:-4])
             
         if (os.path.isfile('feature.xlsx') == False):
-            self.df.to_excel(myDirectory + '/Result_' + nameFile[:-4] + '/feature.xlsx', index=False) 
+            self.df.to_excel(myDirectory + '/Result_' + nameFile[:-4] + '/feature.xlsx', 'Sheet1',index=False) 
                    
         self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
 
@@ -378,6 +380,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         total_area = self.df['Area'].get_values()
         length = self.df['Length'].get_values()
         width = self.df['Width'].get_values()
+        row = [self.indexes, total_area, length, width]
         self.dialog.label_result.setText(str(len(self.indexes)))
         self.dialog.label_length.setText(str(round(sum(length)/len(length),2)) +' px')
         self.dialog.label_width.setText(str(round(sum(width)/len(width),2)) +' px')
@@ -405,16 +408,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         contorno_hyallela = contours[0]                                                                         
         thresh[...] = 0                                                                             
         cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-        thresh_copy = thresh.copy()
-        
-        cnt = contours[0]  
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE) 
         
         # Drawing the contour
         contours[0] += 10                                      # Hyallela's Contours
         #cv2.drawContours(individual, contours, 0, (0,0,255), 1)
-        ellipse = cv2.fitEllipse(contours[0])    
-        cv2.ellipse(individual,ellipse,(0,0,255),1) 
+ 
+        (x,y),(ma,MA),angle = cv2.fitEllipse(contours[0])   
+        cv2.ellipse(individual,((x,y),(ma,MA),angle),(0,0,255),1) 
 
         # ---------------- Show result --------------------------
         self.dialog_individual.label_area.setText(str(self.df.iloc[self.dialog_individual.get_pos()]['Area']))
