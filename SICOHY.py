@@ -292,10 +292,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.cont_hyallela += 1
 
                 individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
-                individual_copy = individual.copy()
                 hyallela_HSV = cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
+                hyallela_gray = cv2.cvtColor(individual,cv2.COLOR_BGR2GRAY)
+                #ret, thresh1 = cv2.threshold(hyallela_gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+
                 H,S,V = cv2.split(hyallela_HSV)
-                ret,thresh = cv2.threshold(H[10:H.shape[0]-10, 10:H.shape[1]-10 ],50,255,cv2.THRESH_BINARY_INV)
+                ret,thresh = cv2.threshold(H,50,255,cv2.THRESH_BINARY_INV)
+                thresh_copy = thresh.copy()
 
                 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
                 contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
@@ -303,7 +306,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 thresh[...] = 0                                                                             
                 cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
                 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-                thresh_copy = thresh.copy()
                 
                 cnt = contours[0]  
                 
@@ -314,20 +316,65 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
 
                 # Curvature
+                # Deleted noise
+                kernel = np.ones((3,3),np.uint8)
+                opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+                
+                # Find the area of the background
+                sure_bg = cv2.dilate(opening,kernel,iterations=3)
+                
+                # Find the area of ​​the first
+                dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
+                ret, sure_fg = cv2.threshold(dist_transform,0.5*dist_transform.max(),255,0)
+
+                # Find the unknown region (edges)
+                sure_fg = np.uint8(sure_fg)
+                unknown = cv2.subtract(sure_bg,sure_fg)
+                img_no_int_part = unknown/255
+                img_no_int_part = np.array(unknown, dtype=np.uint8)
+                img_no_int_part = img_no_int_part * hyallela_gray
+                
+                alto, ancho = img_no_int_part.shape
+                if alto*ancho<=4000:
+                    Rmin=5
+                elif alto*ancho<=9000:
+                    Rmin=20
+                elif alto*ancho<=12000:
+                    Rmin=54
+                elif alto*ancho<=20000:
+                    Rmin = 59
+                elif alto*ancho<=30000:
+                    Rmin = 66
+                else:
+                    Rmin = 70
+
+                detected_circles = cv2.HoughCircles(img_no_int_part, cv2.HOUGH_GRADIENT, 1.5, 20, param1 = 50, param2 = 30, minRadius = Rmin, maxRadius = 0)
                 imagen_draw = thresh_copy*0
-                src = cv2.cvtColor(individual_copy, cv2.COLOR_BGR2GRAY)
-                src = cv2.medianBlur(src, 7)
                 
-                
-                circles = cv2.HoughCircles(src, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30, minRadius=0, maxRadius=0)
-                try:
-                    circles = np.uint16(np.around(circles))
-                    cord = circles[0][0]
+                if detected_circles is not None:
+                    # Convert the circle parameters a, b and r to integers. 
+                    detected_circles = np.uint16(np.around(detected_circles)) 
+                    curvature = []
+                    for pt in detected_circles[0, :]: 
+                        a, b, r = pt[0], pt[1], pt[2] 
+                        imagen_draw = thresh_copy*0
+                        # Draw the circumference of the circle. 
+                        cv2.circle(imagen_draw, (a, b), r, 255, 1) 
+                        and_img = cv2.bitwise_and(sure_bg,imagen_draw)
+                        curvature.append(np.count_nonzero(and_img))
+
+
+                        # Draw a small circle (of radius 1) to show the center. 
+                        #cv2.circle(hya_copy, (a, b), 1, (0, 0, 255), 3)
+
+                    imagen_draw = thresh_copy*0
+                    index_max_curvature = np.argmax(curvature)
+                    cord = detected_circles[0][index_max_curvature]
                     cv2.circle(imagen_draw, (cord[0], cord[1]), cord[2], 255, 1)
-                    and_img = cv2.bitwise_and(thresh_copy,imagen_draw)
-                    curvature = np.count_nonzero(and_img)
-                except:
-                    curvature = 'none'
+                    and_img = cv2.bitwise_and(sure_bg,imagen_draw)
+                    curvature = curvature[index_max_curvature]
+                else:
+                    curvature = 'None'
                 
                 # ---------------- Show result --------------------------
                 # Major axis like length and minor axis like width
@@ -349,11 +396,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.worker.finish_flag = 1
         (myDirectory,nameFile) = os.path.split(self.image_path)
         self.df = pd.DataFrame(rows, columns=['Area','Perimeter','Eccentricity','Curvature', 'Length', 'Width'])
+
+        total_area = self.df['Area'].get_values()
+        length = self.df['Length'].get_values()
+        width = self.df['Width'].get_values()
+        row = [[len(self.indexes), sum(total_area), round(sum(length)/len(length),2), round(sum(width)/len(width),2)]]
+        dframe = pd.DataFrame(row, columns=['Hyallela detected','Total area','Average length','Average width'])
+ 
         if (os.path.isdir(myDirectory + '/Result_' + nameFile[:-4]) == False):
             os.mkdir(myDirectory + '/Result_' + nameFile[:-4])
             
         if (os.path.isfile('feature.xlsx') == False):
-            self.df.to_excel(myDirectory + '/Result_' + nameFile[:-4] + '/feature.xlsx', 'Sheet1',index=False) 
+            writer = pd.ExcelWriter(myDirectory + '/Result_' + nameFile[:-4] + '/feature.xlsx')
+            self.df.to_excel(writer, sheet_name='individual',index=False) 
+            dframe.to_excel(writer, sheet_name='general',index=False) 
+            writer.save()
+            writer.close()
                    
         self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
 
@@ -379,8 +437,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog = Results(self)
         total_area = self.df['Area'].get_values()
         length = self.df['Length'].get_values()
-        width = self.df['Width'].get_values()
-        row = [self.indexes, total_area, length, width]
+        width = self.df['Width'].get_values()            
         self.dialog.label_result.setText(str(len(self.indexes)))
         self.dialog.label_length.setText(str(round(sum(length)/len(length),2)) +' px')
         self.dialog.label_width.setText(str(round(sum(width)/len(width),2)) +' px')
