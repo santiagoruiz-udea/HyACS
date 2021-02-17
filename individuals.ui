@@ -617,9 +617,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>70</x>
       <y>360</y>
-      <width>111</width>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -635,7 +635,7 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Curvature</string>
+     <string>Arc length</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -671,9 +671,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>410</y>
-      <width>151</width>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
@@ -689,7 +689,7 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Average length</string>
+     <string>Length</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -743,9 +743,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>460</y>
-      <width>141</width>
+      <width>101</width>
       <height>31</height>
      </rect>
     </property>
@@ -761,7 +761,7 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Average width</string>
+     <string>Width</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -815,9 +815,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>510</y>
-      <width>61</width>
+      <width>91</width>
       <height>31</height>
      </rect>
     </property>
@@ -833,7 +833,7 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Area </string>
+     <string>Area</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -1042,9 +1042,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>350</x>
+      <x>360</x>
       <y>360</y>
-      <width>111</width>
+      <width>101</width>
       <height>31</height>
      </rect>
     </property>
