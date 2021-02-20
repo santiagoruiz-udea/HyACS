@@ -33,7 +33,6 @@ import pandas as pd
 from time import sleep
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 from QtImageViewer import QtImageViewer
-import matplotlib.pyplot as plt
 
 """ ----------------------------------------------------------------------------------------------------------------------------------------------
     ----------------------------------- 2. Implementation of the class and its methods. ----------------------------------------------------------
@@ -137,21 +136,24 @@ class Worker(QObject):
         print('Progress bar completed!')
         self.finished.emit()
         
-    def dish_edge(self):       
-        gray = cv2.cvtColor(self.dish, cv2.COLOR_BGR2GRAY) 
-        gray_blurred = cv2.blur(gray, (5, 5)) 
+    def dish_edge(self):
+        try:       
+            gray = cv2.cvtColor(self.dish, cv2.COLOR_BGR2GRAY) 
+            gray_blurred = cv2.blur(gray, (5, 5)) 
+            
+            detected_circles = cv2.HoughCircles(gray_blurred, cv2.HOUGH_GRADIENT, 1, 20, param1 = 115, param2 = 115)#, minRadius = 1, maxRadius = 40) 
+            detected_circles = np.uint16(np.around(detected_circles)) 
         
-        detected_circles = cv2.HoughCircles(gray_blurred, cv2.HOUGH_GRADIENT, 1, 20, param1 = 115, param2 = 115)#, minRadius = 1, maxRadius = 40) 
-        detected_circles = np.uint16(np.around(detected_circles)) 
-      
-        pt = detected_circles[0,0]
-        a, b, r = pt[0], pt[1], pt[2] 
-     
-        cv2.circle(self.dish, (a, b), r, (0, 255, 0), 10) 
-        self.scale_factor = 100/(2*r)
-                    
-        print('Dish detected!')
-        self.finished.emit()
+            pt = detected_circles[0,0]
+            a, b, r = pt[0], pt[1], pt[2] 
+        
+            cv2.circle(self.dish, (a, b), r, (0, 255, 0), 10) 
+            self.scale_factor = 100/(2*r)
+                        
+            print('Dish detected!')
+            self.finished.emit()
+        except:
+            pass
 
 # Implementation of the class MainWindow
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -248,6 +250,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def run_detectDishEdge(self):
         
         "------------------------------------------------------------------------"
+
         self.thread_DE = QThread()
         self.thread_DE.daemon = False
         self.worker_DE = Worker(self.image, self.progressBar)
@@ -259,261 +262,278 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.thread_DE.finished.connect(self.thread_DE.deleteLater)
         self.thread_DE.start() 
 
+
     """-------------------------------------- c. Predictions --------------------------------------------------- """
-    def Start_execution(self):      
-        self.progressBar.show() 
-        self.run_barProgressUpdate(0, 85, 1.1)
-        self.run_detectDishEdge()
+    def Start_execution(self):
+        try:      
+            self.progressBar.show() 
+            self.run_barProgressUpdate(0, 85, 1.1)
+            self.run_detectDishEdge()
 
-        rows = []
-        net=  cv2.dnn.readNet('SICOHY.weights', 'SICOHY.cfg')        
-        classes = []
-        with open('SICOHY.names',"r") as f:
-          classes = [line.strip() for line in f.readlines()]
-                
-        layer_names = net.getLayerNames()
-        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-        #self.image = cv2.resize(self.image, None, fx=0.3, fy = 0.3)
-        height,width,channels =self.image.shape
-        self.img_copy = self.image.copy()
-        
-        # Detecting objects
-        blob = cv2.dnn.blobFromImage(self.image, 0.00392,(32*64,32*64),(0,0,0), True, crop= False)
-        net.setInput(blob)
-        outs = net.forward(output_layers) #Caracteristica layers
-        
-        self.worker_PB.value = 85
-        self.worker_PB.val_max = 99
-        self.worker_PB.delay = 1
-        
-        # Showing infromations on the screen
-        confidences = []
-        boxes = []
-        class_ids = []
-
-        for out in outs:
-            for detection in out:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                if confidence > 0.5:
-                    #object detected
-                    center_x = int(detection[0]*width)
-                    center_y = int(detection[1]*height)
-                    w = int(detection[2]*width)
-                    h = int(detection[3]*height)
+            rows = []
+            net=  cv2.dnn.readNet('SICOHY.weights', 'SICOHY.cfg')        
+            classes = []
+            with open('SICOHY.names',"r") as f:
+                classes = [line.strip() for line in f.readlines()]
                     
-                    # Rectangle coordinates
-                    x = int(center_x - w /2)
-                    y = int(center_y - h /2)
-                    
-                    boxes.append([x, y, w, h])
-                    confidences.append(float(confidence))
-                    class_ids.append(class_id)
-                    
-                    # cv2.rectangle(self.image, (x, y), (x + w, y + h), (0, 255, 0),2)
-        
-        self.indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4) # Si se repite la identificacion es decir hay dos centro en un mismo objeto
-        font = cv2.FONT_HERSHEY_DUPLEX
-        cont = 0
-        
-        for i in range(len(boxes)):
-            if i in self.indexes:
-                x, y, w, h = boxes[i]
-                label = str(classes[class_ids[i]])
-                cv2.rectangle(self.image, (x, y), (x + w, y + h), (0,255,0),3)
-                cv2.putText(self.image, label, (x, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
-                cv2.putText(self.image, str(round(confidences[i],2)), (x+50, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
+            layer_names = net.getLayerNames()
+            output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+            #self.image = cv2.resize(self.image, None, fx=0.3, fy = 0.3)
+            height,width,channels =self.image.shape
+            self.img_copy = self.image.copy()
+            
+            # Detecting objects
+            blob = cv2.dnn.blobFromImage(self.image, 0.00392,(32*64,32*64),(0,0,0), True, crop= False)
+            net.setInput(blob)
+            outs = net.forward(output_layers) #Caracteristica layers
+            
+            self.worker_PB.value = 85
+            self.worker_PB.val_max = 99
+            self.worker_PB.delay = 1
+            
+            # Showing infromations on the screen
+            confidences = []
+            boxes = []
+            class_ids = []
 
-                self.dic_hyallela[self.cont_hyallela] = [x, y, w, h]                                  # Add boxes in diccionary
-                self.cont_hyallela += 1
-
-                individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
-                
-                # Binarizacion imagenes camara
-                # hyallela_gray = cv2.cvtColor(individual,cv2.COLOR_BGR2GRAY)
-                # ret, thresh = cv2.threshold(hyallela_gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-                
-                # Binarizacion imagenes escaner
-                hyallela_HSV= cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
-                H,S,V = cv2.split(hyallela_HSV)
-                hyallela_gray = cv2.cvtColor(individual,cv2.COLOR_BGR2GRAY)
-                ret, thresh = cv2.threshold(H,30,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-                
-                thresh_copy = thresh.copy()
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))        #np.ones((3,3),np.uint8)                                    # Definition of the structural element for applying morphology
-                morph = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
-        
-                contours, hierarchy = cv2.findContours(morph, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-                contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
-                
-                try:
-                    contorno_hyallela = contours[0]     
-                except:
-                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))        #np.ones((3,3),np.uint8)                                    # Definition of the structural element for applying morphology
-                    morph = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 1)
-                    
-                    contours, hierarchy = cv2.findContours(morph, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-                    contours = sorted(contours, key=cv2.contourArea,reverse=True)  
-                    contorno_hyallela = contours[0]     
-                                                                    
-                thresh[...] = 0                                                                             
-                cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
-                contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-                
-                # cv2.imshow("thresh", thresh_copy)
-                # cv2.imshow("thresh2", thresh2)
-                # cv2.imshow("morph", morph)
-                # cv2.imshow('individual', individual)
-                # cv2.imshow('thresh after morph', thresh)
-                # cv2.imshow('gray', hyallela_gray)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
-                
-                
-                #feature extraction
-                area = cv2.contourArea(contours[0] )                                          # Area
-                perimeter = round(cv2.arcLength(contours[0] ,True),2)                                  # Perimeter
-                (x,y),(ma,MA),angle = cv2.fitEllipse(contours[0] )                            # Ellipse
-                eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
-                
-                # arc_length
-                # Deleted noise
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
-                opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
-                
-                # Find the area of the background
-                sure_bg = cv2.dilate(opening,kernel,iterations=3)
-                
-                # Find the area of ​​the first
-                dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
-                ret, sure_fg = cv2.threshold(dist_transform,0.5*dist_transform.max(),255,0)
-
-                # Find the unknown region (edges)
-                sure_fg = np.uint8(sure_fg)
-                unknown = cv2.subtract(sure_bg,sure_fg)
-                img_no_int_part = unknown/255
-                img_no_int_part = np.array(unknown, dtype=np.uint8)
-                img_no_int_part = img_no_int_part * hyallela_gray
-                
-                alto, ancho = img_no_int_part.shape
-                if alto*ancho<=4000:
-                    Rmin=5
-                elif alto*ancho<=9000:
-                    Rmin=20
-                elif alto*ancho<=12000:
-                    Rmin=54
-                elif alto*ancho<=20000:
-                    Rmin = 59
-                elif alto*ancho<=30000:
-                    Rmin = 66
-                else:
-                    Rmin = 70
-
-                detected_circles = cv2.HoughCircles(img_no_int_part, cv2.HOUGH_GRADIENT, 1.5, 20, param1 = 50, param2 = 30, minRadius = Rmin, maxRadius = 0)
-                imagen_draw = thresh_copy*0
-                
-                if detected_circles is not None:
-                    # Convert the circle parameters a, b and r to integers. 
-                    detected_circles = np.uint16(np.around(detected_circles)) 
-                    arc_length = []
-                    for pt in detected_circles[0, :]: 
-                        a, b, r = pt[0], pt[1], pt[2] 
-                        imagen_draw = thresh_copy*0
-                        # Draw the circumference of the circle. 
-                        cv2.circle(imagen_draw, (a, b), r, 255, 1) 
-                        and_img = cv2.bitwise_and(sure_bg,imagen_draw)
+            for out in outs:
+                for detection in out:
+                    scores = detection[5:]
+                    class_id = np.argmax(scores)
+                    confidence = scores[class_id]
+                    if confidence > 0.5:
+                        #object detected
+                        center_x = int(detection[0]*width)
+                        center_y = int(detection[1]*height)
+                        w = int(detection[2]*width)
+                        h = int(detection[3]*height)
                         
-                        #contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-                        #contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
-                        #contorno_hyallela = contours[0]
-                
-                        arc_length.append(np.count_nonzero(and_img))
+                        # Rectangle coordinates
+                        x = int(center_x - w /2)
+                        y = int(center_y - h /2)
+                        
+                        boxes.append([x, y, w, h])
+                        confidences.append(float(confidence))
+                        class_ids.append(class_id)
+                        
+                        # cv2.rectangle(self.image, (x, y), (x + w, y + h), (0, 255, 0),2)
+            
+            self.indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4) # Si se repite la identificacion es decir hay dos centro en un mismo objeto
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cont = 0
+            
+            for i in range(len(boxes)):
+                if i in self.indexes:
+                    x, y, w, h = boxes[i]
+                    label = str(classes[class_ids[i]])
+                    cv2.rectangle(self.image, (x, y), (x + w, y + h), (0,255,0),3)
+                    cv2.putText(self.image, label, (x, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
+                    cv2.putText(self.image, str(round(confidences[i],2)), (x+50, y - 8), font, 0.4, (0,255,0), 1,cv2.LINE_AA)
 
-                    imagen_draw = thresh_copy*0
-                    index_max_arc_length = np.argmax(arc_length)
-                    cord = detected_circles[0][index_max_arc_length]
-                    cv2.circle(imagen_draw, (cord[0], cord[1]), cord[2], 255, 1)
-                    and_img = cv2.bitwise_and(sure_bg,imagen_draw)
+                    self.dic_hyallela[self.cont_hyallela] = [x, y, w, h]                                  # Add boxes in diccionary
+                    self.cont_hyallela += 1
+
+                    individual = self.img_copy[y-10:y+h+10,x-10:x+w+10,:].copy()
                     
-                    mask_rgb = np.zeros_like(individual)
-                    mask_rgb[:,:,0] = and_img*0
-                    mask_rgb[:,:,1] = and_img
-                    mask_rgb[:,:,2] = and_img*0
-                                
-                    roi = individual.copy()
-                    mask = cv2.bitwise_and(roi,roi,mask = 255-and_img)
+                    # Binarizacion imagenes camara
+                    # hyallela_gray = cv2.cvtColor(individual,cv2.COLOR_BGR2GRAY)
+                    # ret, thresh = cv2.threshold(hyallela_gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
                     
-                    # cv2.imshow('mask', cv2.add(mask,mask_rgb))
+                    # Binarizacion imagenes escaner
+                    hyallela_HSV= cv2.cvtColor(individual,cv2.COLOR_BGR2HSV)
+                    H,S,V = cv2.split(hyallela_HSV)
+                    hyallela_gray = cv2.cvtColor(individual,cv2.COLOR_BGR2GRAY)
+                    ret, thresh = cv2.threshold(H,30,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+                    
+                    thresh_copy = thresh.copy()
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))        #np.ones((3,3),np.uint8)                                    # Definition of the structural element for applying morphology
+                    morph = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+            
+                    contours, hierarchy = cv2.findContours(morph, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                    contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
+                    
+                    try:
+                        contorno_hyallela = contours[0]     
+                    except:
+                        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))        #np.ones((3,3),np.uint8)                                    # Definition of the structural element for applying morphology
+                        morph = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 1)
+                        
+                        contours, hierarchy = cv2.findContours(morph, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                        contours = sorted(contours, key=cv2.contourArea,reverse=True)  
+                        contorno_hyallela = contours[0]     
+                                                                        
+                    thresh[...] = 0                                                                             
+                    cv2.drawContours(thresh, [contorno_hyallela], 0, 255, cv2.FILLED)
+                    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                    
+                    # cv2.imshow("thresh", thresh_copy)
+                    # cv2.imshow("thresh2", thresh2)
+                    # cv2.imshow("morph", morph)
+                    # cv2.imshow('individual', individual)
+                    # cv2.imshow('thresh after morph', thresh)
+                    # cv2.imshow('gray', hyallela_gray)
                     # cv2.waitKey(0)
                     # cv2.destroyAllWindows()
+                    
+                    
+                    #feature extraction
+                    area = cv2.contourArea(contours[0] )                                          # Area
+                    perimeter = round(cv2.arcLength(contours[0] ,True),2)                                  # Perimeter
+                    (x,y),(ma,MA),angle = cv2.fitEllipse(contours[0] )                            # Ellipse
+                    eccentricity = round(np.sqrt(1 - (pow(ma,2)/pow(MA,2))),2)           # Eccentricity
+                    
+                    # arc_length
+                    # Deleted noise
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+                    opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+                    
+                    # Find the area of the background
+                    sure_bg = cv2.dilate(opening,kernel,iterations=3)
+                    
+                    # Find the area of ​​the first
+                    dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
+                    ret, sure_fg = cv2.threshold(dist_transform,0.5*dist_transform.max(),255,0)
+
+                    # Find the unknown region (edges)
+                    sure_fg = np.uint8(sure_fg)
+                    unknown = cv2.subtract(sure_bg,sure_fg)
+                    img_no_int_part = unknown/255
+                    img_no_int_part = np.array(unknown, dtype=np.uint8)
+                    img_no_int_part = img_no_int_part * hyallela_gray
+                    
+                    alto, ancho = img_no_int_part.shape
+                    if alto*ancho<=4000:
+                        Rmin=5
+                    elif alto*ancho<=9000:
+                        Rmin=20
+                    elif alto*ancho<=12000:
+                        Rmin=54
+                    elif alto*ancho<=20000:
+                        Rmin = 59
+                    elif alto*ancho<=30000:
+                        Rmin = 66
+                    else:
+                        Rmin = 70
+
+                    detected_circles = cv2.HoughCircles(img_no_int_part, cv2.HOUGH_GRADIENT, 1.5, 20, param1 = 50, param2 = 30, minRadius = Rmin, maxRadius = 0)
+                    imagen_draw = thresh_copy*0
+                    
+                    if detected_circles is not None:
+                        # Convert the circle parameters a, b and r to integers. 
+                        detected_circles = np.uint16(np.around(detected_circles)) 
+                        arc_length = []
+                        for pt in detected_circles[0, :]: 
+                            a, b, r = pt[0], pt[1], pt[2] 
+                            imagen_draw = thresh_copy*0
+                            # Draw the circumference of the circle. 
+                            cv2.circle(imagen_draw, (a, b), r, 255, 1) 
+                            and_img = cv2.bitwise_and(sure_bg,imagen_draw)
+                            
+                            #contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+                            #contours = sorted(contours, key=cv2.contourArea,reverse=True)                                           
+                            #contorno_hyallela = contours[0]
+                    
+                            arc_length.append(np.count_nonzero(and_img))
+
+                        imagen_draw = thresh_copy*0
+                        index_max_arc_length = np.argmax(arc_length)
+                        cord = detected_circles[0][index_max_arc_length]
+                        cv2.circle(imagen_draw, (cord[0], cord[1]), cord[2], 255, 1)
+                        and_img = cv2.bitwise_and(sure_bg,imagen_draw)
                         
-                    arc_length = arc_length[index_max_arc_length]
-                else:
-                    cont +=1
-                    (x,y),(a,b),angle = cv2.fitEllipse(contours[0])   
-                    arc_length = (2/3)*math.pi*( 3*(a+b) - math.sqrt((3*a+b)*(a+3*b)))/2
-                
-                # ---------------- Show result --------------------------
-                x,y,w,h = cv2.boundingRect(contours[0])
-                length = max(w,h)
-                width = min(w,h)
+                        mask_rgb = np.zeros_like(individual)
+                        mask_rgb[:,:,0] = and_img*0
+                        mask_rgb[:,:,1] = and_img
+                        mask_rgb[:,:,2] = and_img*0
+                                    
+                        roi = individual.copy()
+                        mask = cv2.bitwise_and(roi,roi,mask = 255-and_img)
+                        
+                        # cv2.imshow('mask', cv2.add(mask,mask_rgb))
+                        # cv2.waitKey(0)
+                        # cv2.destroyAllWindows()
+                            
+                        arc_length = arc_length[index_max_arc_length]
+                    else:
+                        cont +=1
+                        (x,y),(a,b),angle = cv2.fitEllipse(contours[0])   
+                        arc_length = (2/3)*math.pi*( 3*(a+b) - math.sqrt((3*a+b)*(a+3*b)))/2
+                    
+                    # ---------------- Show result --------------------------
+                    x,y,w,h = cv2.boundingRect(contours[0])
+                    length = max(w,h)
+                    width = min(w,h)
 
-                area = round(area*(self.worker_DE.scale_factor**2),2)
-                perimeter = round(perimeter*self.worker_DE.scale_factor,2)
-                arc_length = round(arc_length*self.worker_DE.scale_factor,2)
-                length = round(length*self.worker_DE.scale_factor, 2)
-                width = round(width*self.worker_DE.scale_factor,2)
-                                
-                row = [area, perimeter, eccentricity, arc_length, length, width]
-                rows.append(row)
+                    area = round(area*(self.worker_DE.scale_factor**2),2)
+                    perimeter = round(perimeter*self.worker_DE.scale_factor,2)
+                    arc_length = round(arc_length*self.worker_DE.scale_factor,2)
+                    length = round(length*self.worker_DE.scale_factor, 2)
+                    width = round(width*self.worker_DE.scale_factor,2)
+                                    
+                    row = [area, perimeter, eccentricity, arc_length, length, width]
+                    rows.append(row)
 
-        print(cont)
-        self.worker_PB.value = 100
-        sleep(1.1)
-        
-        self.worker_PB.finish_flag = 1
-        (myDirectory,nameFile) = os.path.split(self.image_path)
-        self.df = pd.DataFrame(rows, columns=['Area (mm^2)','Perimeter (mm)','Eccentricity','Arc length (mm)', 'Length (mm)', 'Width (mm)'])
-
-        area = self.df['Area (mm^2)'].values
-        arc_length = self.df['Arc length (mm)'].values
-        length = self.df['Length (mm)'].values
-        width = self.df['Width (mm)'].values
-        perimeter = self.df['Perimeter (mm)'].values
-        eccentricity = self.df['Eccentricity'].values
-        
-        row = [[len(self.indexes), sum(area), round(sum(area)/len(area),2), round(sum(arc_length)/len(arc_length),2), round(sum(length)/len(length),2), round(sum(width)/len(width),2), round(sum(perimeter)/len(perimeter),2), round(sum(eccentricity)/len(eccentricity),2)]]
-        dframe = pd.DataFrame(row, columns=['Individuals detected','Total area (mm^2)', 'Average area (mm^2)','Average Arc length (mm)', 'Average length (mm)','Average width (mm)','Average perimeter (mm)', 'Average eccentricity'])
- 
-        if (os.path.isdir(myDirectory + '/Result_' + nameFile[:-4]) == False):
-            os.mkdir(myDirectory + '/Result_' + nameFile[:-4])
+            print(cont)
+            self.worker_PB.value = 100
+            sleep(1.1)
             
-        if (os.path.isfile('Extracted_features.xlsx') == False):
-            writer = pd.ExcelWriter(myDirectory + '/Result_' + nameFile[:-4] + '/Extracted_features.xlsx')
-            self.df.to_excel(writer, sheet_name='Individuals',index=False) 
-            dframe.to_excel(writer, sheet_name='Averages values',index=False) 
-            writer.save()
-            writer.close()
-                   
-        self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
-        cv2.imwrite(myDirectory + '/Result_' + nameFile[:-4] + '/labels.tif', self.image)
-        
-        image_interface=QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
-        frame_interface = QtGui.QPixmap()
-        frame_interface.convertFromImage(image_interface.rgbSwapped())
+            self.worker_PB.finish_flag = 1
+            (myDirectory,nameFile) = os.path.split(self.image_path)
+            self.df = pd.DataFrame(rows, columns=['Area (mm^2)','Perimeter (mm)','Eccentricity','Arc length (mm)', 'Length (mm)', 'Width (mm)'])
 
-        self.frame_interface.setImage(frame_interface)
-        self.frame_interface.setGeometry(30, 50, 635, 635)
-        self.frame_interface.setStyleSheet("background:  rgb(39, 108, 222); border: 1px solid rgb(39, 108, 222)")
-        self.frame_interface.show()
-        
-        self.Results.setStyleSheet("color: white; background:  rgb(39, 108, 222); border: 1px solid white; border-radius: 10px; font: 75 14pt 'Reboto Medium';")
-        self.Results.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+            area = self.df['Area (mm^2)'].values
+            arc_length = self.df['Arc length (mm)'].values
+            length = self.df['Length (mm)'].values
+            width = self.df['Width (mm)'].values
+            perimeter = self.df['Perimeter (mm)'].values
+            eccentricity = self.df['Eccentricity'].values
+            
+            row = [[len(self.indexes), sum(area), round(sum(area)/len(area),2), round(sum(arc_length)/len(arc_length),2), round(sum(length)/len(length),2), round(sum(width)/len(width),2), round(sum(perimeter)/len(perimeter),2), round(sum(eccentricity)/len(eccentricity),2)]]
+            dframe = pd.DataFrame(row, columns=['Individuals detected','Total area (mm^2)', 'Average area (mm^2)','Average Arc length (mm)', 'Average length (mm)','Average width (mm)','Average perimeter (mm)', 'Average eccentricity'])
+    
+            if (os.path.isdir(myDirectory + '/Result_' + nameFile[:-4]) == False):
+                os.mkdir(myDirectory + '/Result_' + nameFile[:-4])
+                
+            if (os.path.isfile('Extracted_features.xlsx') == False):
+                writer = pd.ExcelWriter(myDirectory + '/Result_' + nameFile[:-4] + '/Extracted_features.xlsx')
+                self.df.to_excel(writer, sheet_name='Individuals',index=False) 
+                dframe.to_excel(writer, sheet_name='Averages values',index=False) 
+                writer.save()
+                writer.close()
+                    
+            self.image_interface = cv2.resize(self.image, (720,720))                     # A video object is created according to the path selected
+            cv2.imwrite(myDirectory + '/Result_' + nameFile[:-4] + '/labels.tif', self.image)
+            
+            image_interface=QtGui.QImage(self.image_interface,self.image_interface.shape[1],self.image_interface.shape[0],self.image_interface.shape[1]*self.image_interface.shape[2],QtGui.QImage.Format_RGB888)
+            frame_interface = QtGui.QPixmap()
+            frame_interface.convertFromImage(image_interface.rgbSwapped())
 
-        self.Individuals.setStyleSheet("color: white; background:  rgb(39, 108, 222); border: 1px solid white; border-radius: 10px; font: 75 14pt 'Reboto Medium';")
-        self.Individuals.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
-        self.completed.show()
+            self.frame_interface.setImage(frame_interface)
+            self.frame_interface.setGeometry(30, 50, 635, 635)
+            self.frame_interface.setStyleSheet("background:  rgb(39, 108, 222); border: 1px solid rgb(39, 108, 222)")
+            self.frame_interface.show()
+            
+            self.Results.setStyleSheet("color: white; background:  rgb(39, 108, 222); border: 1px solid white; border-radius: 10px; font: 75 14pt 'Reboto Medium';")
+            self.Results.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+
+            self.Individuals.setStyleSheet("color: white; background:  rgb(39, 108, 222); border: 1px solid white; border-radius: 10px; font: 75 14pt 'Reboto Medium';")
+            self.Individuals.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+            self.completed.show()
+        except:
+            self.worker_PB.finish_flag = 1
+            self.progressBar.close()
+            
+            if self.image_path == 0 :
+                # It indicates that a image has not been imported yet 
+                message = 'The image has not been imported, please do so to be able to extract information.'
+                QMessageBox.setStyleSheet(self,"QMessageBox\n{\n	background-color: rgb(255, 255, 255);\n}\n")
+                QMessageBox.critical(self, 'Start error', message)
+            else:
+                # It indicates that the imported image is invalid
+                message = 'The file selected is invalid, please import a valid file to extract information'
+                QMessageBox.setStyleSheet(self,"QMessageBox\n{\n	background-color: rgb(255, 255, 255);\n}\n")
+                QMessageBox.critical(self, 'Import error', message)
+                self.image_path = 0
 
         
     """------------------------------------------------ g.  Stopping the execution  --------------------------------------------------------"""       
