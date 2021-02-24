@@ -11,7 +11,7 @@
     ------------------------------------------------------ * Julio Eduardo Cañón Barriga ---------------------------------------------------------
     ------------------------------------------------------ * Ludy Yanith Pineda Alarcón ----------------------------------------------------------
     ------------------------------------------------------ * Yarin Tatiana Puerta Quintana -------------------------------------------------------
-    ------------------------------------------------------ * Maycol EstebanZuluaga Montoya -------------------------------------------------------
+    ------------------------------------------------------ * Maycol Esteban Zuluaga Montoya -------------------------------------------------------
     ------------------------------------------------------ * Santiago Ruiz González --------------------------------------------------------------
     ----------------------------------------------------------------------------------------------------------------------------------------------
     ------------------ Project Name: Identification, counting and metrics calculation of Hyalella individuals inside a Petri dish ----------------
@@ -266,8 +266,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             excel_file_rows = []
     
             # --------------- YOLO model setting-----------------------
-            net = cv2.dnn.readNet('HyCAS.weights', 'HyCAS.cfg')                             # The model is read (weights and configuration file)
-            with open('HyCAS.names',"r") as f:                                              # Classes are read
+            net = cv2.dnn.readNet('HyACS.weights', 'HyACS.cfg')                             # The model is read (weights and configuration file)
+            with open('HyACS.names',"r") as f:                                              # Classes are read
                 classes = [line.strip() for line in f.readlines()]                          
                     
             layer_names = net.getLayerNames()
@@ -630,7 +630,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         frame_interface.convertFromImage(image_interface.rgbSwapped())
         self.dialog_individual.Lb_hyallela.setPixmap(frame_interface)
         self.dialog_individual.Lb_hyallela.show()
-
 
     """------------------- 2.4.h. Method to exit the dialog -----------------------------------"""
     def Exit_execution(self):

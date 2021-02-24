@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SICOHY</class>
- <widget class="QMainWindow" name="SICOHY">
+ <class>HyACS</class>
+ <widget class="QMainWindow" name="HyACS">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -426,7 +426,7 @@
    </palette>
   </property>
   <property name="windowTitle">
-   <string>SICOHY</string>
+   <string>HyACS</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget
