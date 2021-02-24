@@ -426,7 +426,7 @@
    </palette>
   </property>
   <property name="windowTitle">
-   <string>Counting flying insects</string>
+   <string>HyACS</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget
