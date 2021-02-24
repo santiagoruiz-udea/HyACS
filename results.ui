@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>497</width>
-    <height>457</height>
+    <width>493</width>
+    <height>628</height>
    </rect>
   </property>
   <property name="palette">
@@ -449,7 +449,7 @@
     <property name="geometry">
      <rect>
       <x>190</x>
-      <y>280</y>
+      <y>470</y>
       <width>111</width>
       <height>41</height>
      </rect>
@@ -488,7 +488,7 @@ QPushButton:hover {
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>330</y>
+      <y>520</y>
       <width>71</width>
       <height>81</height>
      </rect>
@@ -541,7 +541,7 @@ QPushButton:hover {
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>330</y>
+      <y>520</y>
       <width>71</width>
       <height>81</height>
      </rect>
@@ -580,7 +580,7 @@ QPushButton:hover {
       <x>50</x>
       <y>50</y>
       <width>391</width>
-      <height>211</height>
+      <height>401</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -619,7 +619,7 @@ QPushButton:hover {
      <rect>
       <x>70</x>
       <y>60</y>
-      <width>161</width>
+      <width>171</width>
       <height>31</height>
      </rect>
     </property>
@@ -635,13 +635,13 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Hyallela detected</string>
+     <string>Individuals detected</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_result">
+   <widget class="QLabel" name="label_individuals">
     <property name="geometry">
      <rect>
       <x>260</x>
@@ -671,9 +671,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>60</x>
+      <x>70</x>
       <y>110</y>
-      <width>161</width>
+      <width>131</width>
       <height>31</height>
      </rect>
     </property>
@@ -745,7 +745,7 @@ QPushButton:hover {
      <rect>
       <x>60</x>
       <y>160</y>
-      <width>161</width>
+      <width>141</width>
       <height>31</height>
      </rect>
     </property>
@@ -815,9 +815,9 @@ QPushButton:hover {
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>210</y>
-      <width>131</width>
+      <x>70</x>
+      <y>360</y>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -833,7 +833,7 @@ QPushButton:hover {
      <enum>QFrame::Sunken</enum>
     </property>
     <property name="text">
-     <string>Total area </string>
+     <string>Average area </string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -843,7 +843,7 @@ QPushButton:hover {
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>210</y>
+      <y>410</y>
       <width>161</width>
       <height>31</height>
      </rect>
@@ -870,7 +870,7 @@ QPushButton:hover {
     <property name="geometry">
      <rect>
       <x>330</x>
-      <y>340</y>
+      <y>530</y>
       <width>141</width>
       <height>71</height>
      </rect>
@@ -910,7 +910,7 @@ QPushButton:hover {
     <property name="geometry">
      <rect>
       <x>190</x>
-      <y>340</y>
+      <y>530</y>
       <width>131</width>
       <height>71</height>
      </rect>
@@ -946,6 +946,294 @@ QPushButton:hover {
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="Line" name="line_4">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>240</y>
+      <width>371</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QFrame{
+	background: rgb(200,200,200);
+}</string>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>260</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string>Average perimeter</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="Line" name="line_5">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>290</y>
+      <width>371</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QFrame{
+	background: rgb(200,200,200);
+}</string>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>210</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string>Average Arc Length</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>310</y>
+      <width>171</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string>Average eccentricity</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="Line" name="line_6">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>340</y>
+      <width>371</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QFrame{
+	background: rgb(200,200,200);
+}</string>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_perimeter">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>260</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_eccentricity">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>310</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_aver_area">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>360</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="Line" name="line_7">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>390</y>
+      <width>371</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QFrame{
+	background: rgb(200,200,200);
+}</string>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>410</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string>Total area </string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_arc_length">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>210</y>
+      <width>161</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel
+{
+	background: rgb(200,200,200);
+ 	font-size:12pt; 
+	font-weight:600;
+}</string>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Sunken</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>label_5</zorder>
    <zorder>Exit</zorder>
    <zorder>lb_udea</zorder>
@@ -953,7 +1241,7 @@ QPushButton:hover {
    <zorder>label</zorder>
    <zorder>line</zorder>
    <zorder>label_3</zorder>
-   <zorder>label_result</zorder>
+   <zorder>label_individuals</zorder>
    <zorder>label_4</zorder>
    <zorder>line_2</zorder>
    <zorder>label_length</zorder>
@@ -964,6 +1252,18 @@ QPushButton:hover {
    <zorder>label_area</zorder>
    <zorder>lb_gaia</zorder>
    <zorder>lb_geolimna</zorder>
+   <zorder>line_4</zorder>
+   <zorder>label_8</zorder>
+   <zorder>line_5</zorder>
+   <zorder>label_9</zorder>
+   <zorder>label_10</zorder>
+   <zorder>line_6</zorder>
+   <zorder>label_perimeter</zorder>
+   <zorder>label_eccentricity</zorder>
+   <zorder>label_aver_area</zorder>
+   <zorder>line_7</zorder>
+   <zorder>label_11</zorder>
+   <zorder>label_arc_length</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="enabled">
