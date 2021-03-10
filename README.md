@@ -7,11 +7,7 @@
 * [Authors](#authors)
 
 ## General info
-HyACS is a software that performs an algorithm to identify, count, and extract some physical features of Hyalella individuals by applying artificial vision and digital image processing techniques. The images used correspond to Petri dishes with these organisms inside. 
-
-Hyalella is a bioindicator organism that has a high organic material content, and it is used in ecotoxicological tests due to its high sensitivity to heavy metals and environmental impacts. Hyalella's high population is related to fluctuations in electrical conductivity and low concentrations of dissolved oxygen density, which allows determining changes in dominance, diversity, reproductive strategies, and their relationship with physical and chemical variables of the environment.
-
-This software takes an image of a Petri dish and processes it performing the predictions to identify and count Hyalellas, and then calculates some of the individual’s metrics such as arc length, perimeter, eccentricity, etc.
+HyACS is a software that performs an algorithm to identify, count, and extract some physical features of Hyalella individuals by applying artificial vision and digital image processing techniques. The images used correspond to Petri dishes with these organisms inside. Hyalella is a bioindicator organism that has a high organic material content, and it is used in ecotoxicological tests due to its high sensitivity to heavy metals and environmental impacts. Hyalella's high population is related to fluctuations in electrical conductivity and low concentrations of dissolved oxygen density, which allows determining changes in dominance, diversity, reproductive strategies, and their relationship with physical and chemical variables of the environment. This software takes an image of a Petri dish and processes it performing the predictions to identify and count Hyalellas, and then calculates some of the individual’s metrics such as arc length, perimeter, eccentricity, etc.
 	
 ## Technologies
 This project was created with:
