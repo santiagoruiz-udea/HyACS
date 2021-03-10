@@ -31,8 +31,7 @@ There are several files related to the graphical user interface and the deep lea
 ```
 $ python HyACS.py
 ```
-Then, the initial interface will appear. You can follow the user's guide to continue using the software.
-You can test HyACS using the image 'Hyalella_2.tif' also included in the project.
+Then, the initial interface will appear. You can follow the user's guide to continue using the software and test it using the image 'Hyalella_2.tif' also included in the project.
 
 ## Authors
 * David Stephen Fernández Mc Cann
