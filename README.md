@@ -26,7 +26,7 @@ This project was created with:
 * Go to the folder 'dist'
 * Double-click the file 'HyACS.exe' and wait for a moment until the initial interface appears.
 
-You can test HyACS using the image 'Hyalella_2.tif' also included in the main folder.
+You can follow the user's guide to continue using the software and test it using the image 'Hyalella_2.tif' also included in the main folder.
 
 ## Authors
 * David Stephen Fernández Mc Cann
